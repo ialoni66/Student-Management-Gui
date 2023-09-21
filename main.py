@@ -23,9 +23,10 @@ class MainWindow(QMainWindow):
         about_action = QAction("About", self)
         help_menu_item.addAction(about_action)
 
-        add_edit_action = QAction("Search", self)
-        add_edit_action.triggered.connect(self.search)
-        edit_menu_item.addAction(add_edit_action)
+        search_action = QAction("Search", self)
+        edit_menu_item.addAction(search_action)
+        search_action.triggered.connect(self.search)
+
 
         self.table = QTableWidget()
         self.table.setColumnCount(4)
@@ -100,6 +101,7 @@ class InsertDialog(QDialog):
         connection.close()
         main_window.load_data()
 
+
 class SearchDialog(QDialog):
     def __init__(self):
         super().__init__()
@@ -116,13 +118,23 @@ class SearchDialog(QDialog):
 
         # Search Button Widget
         button = QPushButton("Search")
-        button.clicked.connect(self.search_student)
+        button.clicked.connect(self.search)
         layout.addWidget(button)
 
         self.setLayout(layout)
 
-    def search_student(self):
-        pass
+    def search(self):
+        name = self.student_name.text()
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        result = cursor.execute("SELECT * FROM students WHERE name = ?", (name,))
+        rows = list(result)
+        print(rows)
+        items = main_window.table.findItems(name, Qt.MatchFlag.MatchFixedString)
+        for item in items:
+            main_window.table.item(item.rows(), 1).setSelected(True)
+        cursor.close()
+        connection.close()
 
 
 app = QApplication(sys.argv)
